@@ -1,21 +1,21 @@
-import type { IImageData } from "../MockAppData.ts";
+import { Link } from "react-router-dom";
+import type { IImageData } from "../MockAppData";
 import "./Images.css";
 
-interface IImageGridProps {
-    images: IImageData[];
+interface Props {
+  images: IImageData[];
 }
 
-export function ImageGrid(props: IImageGridProps) {
-    const imageElements = props.images.map((image) => (
+export function ImageGrid({ images }: Props) {
+  return (
+    <div className="ImageGrid">
+      {images.map((image) => (
         <div key={image.id} className="ImageGrid-photo-container">
-            <a href={"/images/" + image.id}>
-                <img src={image.src} alt={image.name}/>
-            </a>
+          <Link to={`/images/${image.id}`}>
+            <img src={image.src} alt={image.name} />
+          </Link>
         </div>
-    ));
-    return (
-        <div className="ImageGrid">
-            {imageElements}
-        </div>
-    );
+      ))}
+    </div>
+  );
 }
