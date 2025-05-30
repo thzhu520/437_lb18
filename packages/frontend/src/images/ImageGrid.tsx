@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import type { IImageData } from "../MockAppData";
+import type { IImageData } from "../ApiImageData";
 import "./Images.css";
 
 interface Props {
