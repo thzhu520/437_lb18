@@ -16,9 +16,17 @@ export function ImageNameEditor({ initialValue, imageId, onRename }: INameEditor
     setWorking(true);
     setError(false);
     try {
-      const res = await fetch("/api/images");
+      const res = await fetch(`/api/images/${imageId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ newName: input })
+      });
+
       if (!res.ok) throw new Error();
-      onRename(input);
+
+      onRename(input); // Update parent state
       setIsEditing(false);
     } catch {
       setError(true);
