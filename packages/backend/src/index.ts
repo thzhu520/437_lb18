@@ -4,6 +4,10 @@ import dotenv from "dotenv";
 import { ValidRoutes } from "./shared/ValidRoutes";
 import { ObjectId } from "mongodb";
 
+// lab 22
+import { registerImageRoutes } from "./routes/imageRoutes";
+
+
 // LAB 21: Import Mongo connector and image provider
 import { connectMongo } from "../connectMongo";
 import { ImageProvider } from "../ImageProvider";
@@ -20,12 +24,16 @@ app.use(express.json());
 const mongoClient = connectMongo();
 const imageProvider = new ImageProvider(mongoClient);
 
+//lab 22
+registerImageRoutes(app, imageProvider);
+
+
 // lab 20 delay
 function waitDuration(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// ===== ALL API ROUTES SHOULD GO HERE, BEFORE SPA FALLBACK =====
+// ===== ALL API ROUTES GO HERE, BEFORE SPA FALLBACK =====
 
 // Example endpoint
 app.get("/api/hello", (_req, res) => {
@@ -33,31 +41,31 @@ app.get("/api/hello", (_req, res) => {
 });
 
 // LAB 21: Replace with Mongo-backed image response
-app.get("/api/images", async (_req, res) => {
-  try {
-    await waitDuration(1000); // Delay 1 second for UI loading effect
-    const images = await imageProvider.getAllImagesDenormalized(); // Fetch from DB
-    res.json(images); // Send JSON
-  } catch (err) {
-    console.error("Error in /api/images:", err);
-    res.status(500).json({ error: "Failed to fetch images from MongoDB" });
-  }
-});
+// app.get("/api/images", async (_req, res) => {
+//   try {
+//     await waitDuration(1000); // Delay 1 second for UI loading effect
+//     const images = await imageProvider.getAllImagesDenormalized(); // Fetch from DB
+//     res.json(images); // Send JSON
+//   } catch (err) {
+//     console.error("Error in /api/images:", err);
+//     res.status(500).json({ error: "Failed to fetch images from MongoDB" });
+//   }
+// });
 
-app.patch("/api/images/:imageId", async (req, res) => {
-  const { imageId } = req.params;
-  const { newName } = req.body;
+// app.patch("/api/images/:imageId", async (req, res) => {
+//   const { imageId } = req.params;
+//   const { newName } = req.body;
 
-  console.log("Updating", imageId, "to", newName);
+//   console.log("Updating", imageId, "to", newName);
 
-  try {
-    const result = await imageProvider.updateImageName(imageId, newName);
-    res.json({ success: true, modifiedCount: result.modifiedCount });
-  } catch (err) {
-    console.error("Failed to update image name", err);
-    res.status(500).json({ error: "Failed to update name" });
-  }
-});
+//   try {
+//     const result = await imageProvider.updateImageName(imageId, newName);
+//     res.json({ success: true, modifiedCount: result.modifiedCount });
+//   } catch (err) {
+//     console.error("Failed to update image name", err);
+//     res.status(500).json({ error: "Failed to update name" });
+//   }
+// });
 
 // Optional: log collections for verification
 // (async () => {

@@ -24,30 +24,35 @@ export class ImageProvider {
         this.userCollection = db.collection(process.env.USERS_COLLECTION_NAME!);
     }
 
-    async getAllImagesDenormalized() {
-        const images = await this.imageCollection.find().toArray();
+    async getAllImagesDenormalized(search?: string) {
+        const filter = search ? { name: { $regex: search, $options: "i" } } : {};
+        const images = await this.imageCollection.find(filter).toArray();
+      
         const authorIds = images.map(img => img.author);
         const users = await this.userCollection
-            .find({ _id: { $in: authorIds } })
-            .toArray();
-
+          .find({ _id: { $in: authorIds } })
+          .toArray();
         const userMap = Object.fromEntries(users.map(u => [u._id, u.username]));
-
+      
         return images.map(img => ({
-            id: img._id,
-            src: img.src,
-            name: img.name,
-            author: {
-                id: img.author,
-                username: userMap[img.author] || "unknown"
-            }
+          id: img._id,
+          src: img.src,
+          name: img.name,
+          author: {
+            id: img.author,
+            username: userMap[img.author] || "unknown"
+          }
         }));
-    }
+      }
+      
 
-    async updateImageName(imageId: string, newName: string) {
-        return this.imageCollection.updateOne(
-          { _id: new ObjectId(imageId) }, 
+      async updateImageName(imageId: string, newName: string): Promise<number> {
+        const result = await this.imageCollection.updateOne(
+          { _id: new ObjectId(imageId) },
           { $set: { name: newName } }
         );
+        return result.matchedCount; 
       }
+      
+      
 }

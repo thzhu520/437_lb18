@@ -1,0 +1,44 @@
+### Get all images
+GET http://localhost:3000/api/images
+
+### Get images filtered by name
+GET http://localhost:3000/api/images?name=Shiba
+
+### PATCH name successfully
+PATCH http://localhost:3000/api/images/6639fcbec4b901a342e949eb
+Content-Type: application/json
+
+{
+  "newName": "Shiba Inuuu"
+}
+
+### PATCH with missing name
+PATCH http://localhost:3000/api/images/6639fcbec4b901a342e949eb
+Content-Type: application/json
+
+{
+}
+
+### PATCH with long name
+PATCH http://localhost:3000/api/images/6639fcbec4b901a342e949eb
+Content-Type: application/json
+
+{
+  "newName": "A".repeat(101)
+}
+
+### PATCH with invalid ObjectId
+PATCH http://localhost:3000/api/images/bad-id
+Content-Type: application/json
+
+{
+  "newName": "Anything"
+}
+
+### PATCH with long name (101 characters)
+PATCH http://localhost:3000/api/images/6639fcbec4b901a342e949eb
+Content-Type: application/json
+
+{
+  "newName": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaX"
+}
