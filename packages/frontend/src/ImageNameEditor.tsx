@@ -25,8 +25,7 @@ export function ImageNameEditor({ initialValue, imageId, onRename }: INameEditor
       });
 
       if (!res.ok) throw new Error();
-
-      onRename(input); // Update parent state
+      onRename(input);
       setIsEditing(false);
     } catch {
       setError(true);
@@ -42,9 +41,7 @@ export function ImageNameEditor({ initialValue, imageId, onRename }: INameEditor
           New Name{" "}
           <input disabled={working} value={input} onChange={(e) => setInput(e.target.value)} />
         </label>
-        <button disabled={working || input.length === 0} onClick={handleSubmitPressed}>
-          Submit
-        </button>
+        <button disabled={working || input.length === 0} onClick={handleSubmitPressed}>Submit</button>
         <button onClick={() => setIsEditing(false)}>Cancel</button>
         {working && <p>Working...</p>}
         {error && <p style={{ color: "red" }}>Error submitting name</p>}
