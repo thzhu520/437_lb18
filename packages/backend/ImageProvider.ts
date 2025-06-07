@@ -1,7 +1,6 @@
 import { MongoClient, Collection } from "mongodb";
 import { ObjectId } from "mongodb";
 
-
 interface IImageDocument {
     _id: ObjectId;
     src: string;
@@ -43,16 +42,26 @@ export class ImageProvider {
             username: userMap[img.author] || "unknown"
           }
         }));
-      }
-      
+    }
 
-      async updateImageName(imageId: string, newName: string): Promise<number> {
+    async updateImageName(imageId: string, newName: string): Promise<number> {
         const result = await this.imageCollection.updateOne(
           { _id: new ObjectId(imageId) },
           { $set: { name: newName } }
         );
         return result.matchedCount; 
-      }
-      
-      
+    }
+
+    async createImage(src: string, name: string, author: string): Promise<void> {
+        console.log(`📸 Creating image document: ${name} by ${author}`);
+        
+        await this.imageCollection.insertOne({
+            _id: new ObjectId(),
+            src,
+            name,
+            author
+        });
+        
+        console.log(`✅ Image document created successfully`);
+    }
 }

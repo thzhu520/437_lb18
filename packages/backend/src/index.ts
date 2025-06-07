@@ -6,14 +6,16 @@ import { connectMongo } from "../connectMongo";
 import { ImageProvider } from "../ImageProvider";
 import { CredentialsProvider } from "./CredentialsProvider";
 import { registerImageRoutes } from "./routes/imageRoutes";
-import { registerAuthRoutes } from "./routes/authRoutes"; // Fixed: added "./"
+import { registerAuthRoutes } from "./routes/authRoutes";
 import { verifyAuthToken } from "./middleware/verifyAuthToken";
+import { imageMiddlewareFactory, handleImageFileErrors } from "./middleware/imageUploadMiddleware";
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const STATIC_DIR = process.env.STATIC_DIR || "public";
+const IMAGE_UPLOAD_DIR = process.env.IMAGE_UPLOAD_DIR || "uploads";
 const JWT_SECRET = process.env.JWT_SECRET;
 
 if (!JWT_SECRET) {
@@ -27,6 +29,7 @@ async function main() {
     console.log("Environment check:");
     console.log("- PORT:", PORT);
     console.log("- STATIC_DIR:", STATIC_DIR);
+    console.log("- IMAGE_UPLOAD_DIR:", IMAGE_UPLOAD_DIR);
     console.log("- JWT_SECRET:", JWT_SECRET ? "✅" : "❌");
     console.log("- MONGO_USER:", process.env.MONGO_USER ? "✅" : "❌");
     console.log("- DB_NAME:", process.env.DB_NAME);
@@ -37,6 +40,7 @@ async function main() {
 
     // Setup middleware
     app.use(express.static(STATIC_DIR));
+    app.use("/uploads", express.static(IMAGE_UPLOAD_DIR)); // Serve uploaded images
     app.use(express.json());
 
     // Connect to MongoDB
@@ -55,25 +59,69 @@ async function main() {
       res.send("Hello world");
     });
 
-    // Debug test endpoint
-    app.post("/test-register", (req, res) => {
-      console.log("🧪 Test register route called with body:", req.body);
-      res.json({ message: "Test route works", body: req.body });
-    });
-
     // Auth routes (public - no authentication required)
     console.log("🔐 Setting up auth routes...");
     registerAuthRoutes(app, credentialsProvider);
     console.log("✅ Auth routes registered");
 
-    // Test the routes are actually registered
-    console.log("🧪 Testing route registration...");
-    app.post("/debug-auth-test", (req, res) => {
-      console.log("🧪 Debug auth test called");
-      res.json({ message: "Auth routes are working", timestamp: new Date() });
-    });
+    type UploadRequest = express.Request & {
+      file?: Express.Multer.File;
+      user?: { username: string };
+    };
+    
+    app.post(
+      "/api/images",
+      imageMiddlewareFactory.single("image"),
+      handleImageFileErrors,
+      verifyAuthToken,
+      (async (req: UploadRequest, res: express.Response) => {
+        console.log("📸 Image upload request received");
+    
+        try {
+          if (!req.file) {
+            res.status(400).json({
+              error: "Bad Request",
+              message: "No image file provided",
+            });
+            return;
+          }
+    
+          const imageName = req.body.name;
+          if (!imageName || typeof imageName !== "string") {
+            res.status(400).json({
+              error: "Bad Request",
+              message: "Image name is required",
+            });
+            return;
+          }
+    
+          const username = req.user?.username;
+          if (!username) {
+            res.status(401).json({
+              error: "Unauthorized",
+              message: "Invalid authentication token",
+            });
+            return;
+          }
+    
+          const imageSrc = `/uploads/${req.file.filename}`;
+          await imageProvider.createImage(imageSrc, imageName, username);
+    
+          console.log(`✅ Image uploaded successfully: ${req.file.filename}`);
+          res.status(201).send();
+        } catch (error) {
+          console.error("❌ Image upload error:", error);
+          res.status(500).json({
+            error: "Internal Server Error",
+            message: "Failed to save image",
+          });
+        }
+      }) as express.RequestHandler
+    );
+    
+    
 
-    // Apply authentication middleware to all /api/images routes
+    // Apply authentication middleware to all other /api/images routes
     console.log("🛡️ Setting up authentication middleware...");
     app.use("/api/images", (req, res, next) => {
       verifyAuthToken(req, res, next);
@@ -97,9 +145,8 @@ async function main() {
       console.log(`✅ Server running successfully at http://localhost:${PORT}`);
       console.log(`🌐 Frontend: http://localhost:5173`);
       console.log(`🔍 Test API: http://localhost:3000/api/hello`);
-      console.log(`📝 Register: POST http://localhost:3000/auth/register`);
-      console.log(`🔐 Login: POST http://localhost:3000/auth/login`);
-      console.log(`🧪 Debug: POST http://localhost:3000/debug-auth-test`);
+      console.log(`📸 Upload images: POST http://localhost:3000/api/images`);
+      console.log(`🖼️ View uploads: http://localhost:3000/uploads/`);
     });
 
   } catch (err) {
