@@ -6,7 +6,7 @@ import { connectMongo } from "../connectMongo";
 import { ImageProvider } from "../ImageProvider";
 import { CredentialsProvider } from "./CredentialsProvider";
 import { registerImageRoutes } from "./routes/imageRoutes";
-import { registerAuthRoutes } from "routes/authRoutes";
+import { registerAuthRoutes } from "./routes/authRoutes"; // Fixed: added "./"
 import { verifyAuthToken } from "./middleware/verifyAuthToken";
 
 dotenv.config();
@@ -55,7 +55,9 @@ async function main() {
       res.send("Hello world");
     });
 
+    // Debug test endpoint
     app.post("/test-register", (req, res) => {
+      console.log("🧪 Test register route called with body:", req.body);
       res.json({ message: "Test route works", body: req.body });
     });
 
@@ -63,6 +65,13 @@ async function main() {
     console.log("🔐 Setting up auth routes...");
     registerAuthRoutes(app, credentialsProvider);
     console.log("✅ Auth routes registered");
+
+    // Test the routes are actually registered
+    console.log("🧪 Testing route registration...");
+    app.post("/debug-auth-test", (req, res) => {
+      console.log("🧪 Debug auth test called");
+      res.json({ message: "Auth routes are working", timestamp: new Date() });
+    });
 
     // Apply authentication middleware to all /api/images routes
     console.log("🛡️ Setting up authentication middleware...");
@@ -86,11 +95,11 @@ async function main() {
     // Start server
     app.listen(PORT, () => {
       console.log(`✅ Server running successfully at http://localhost:${PORT}`);
-      console.log(`🌐 Visit: https://thzhu.csse.dev`);
-      console.log(`🔍 Test API: https://thzhu.csse.dev/api/hello`);
-      console.log(`📝 Register: POST https://thzhu.csse.dev/auth/register`);
-      console.log(`🔐 Login: POST https://thzhu.csse.dev/auth/login`);
-      console.log(`📷 Images API: https://thzhu.csse.dev/api/images (requires auth)`);
+      console.log(`🌐 Frontend: http://localhost:5173`);
+      console.log(`🔍 Test API: http://localhost:3000/api/hello`);
+      console.log(`📝 Register: POST http://localhost:3000/auth/register`);
+      console.log(`🔐 Login: POST http://localhost:3000/auth/login`);
+      console.log(`🧪 Debug: POST http://localhost:3000/debug-auth-test`);
     });
 
   } catch (err) {
