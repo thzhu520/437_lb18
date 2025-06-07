@@ -5,6 +5,7 @@ import { ImageDetails } from "./images/ImageDetails";
 import { UploadPage } from "./UploadPage";
 import { LoginPage } from "./LoginPage";
 import { MainLayout } from "./MainLayout";
+import { ProtectedRoute } from "./ProtectedRoute";
 import { ValidRoutes } from "csc437-monorepo-backend/src/shared/ValidRoutes";
 import type { IApiImageData } from "csc437-monorepo-backend/src/common/ApiImageData.ts";
 import { ImageSearchForm } from "./images/ImageSearchForm";
@@ -14,6 +15,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [searchString, setSearchString] = useState("");
+  const [authToken, setAuthToken] = useState<string>("");
   const latestRequestRef = useRef(0);
 
   function fetchImages(query?: string) {
@@ -25,7 +27,13 @@ function App() {
       ? `/api/images?name=${encodeURIComponent(query)}`
       : `/api/images`;
 
-    fetch(url)
+    // Add Authorization header if we have a token
+    const headers: HeadersInit = {};
+    if (authToken) {
+      headers.Authorization = `Bearer ${authToken}`;
+    }
+
+    fetch(url, { headers })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch");
         return res.json();
@@ -48,12 +56,19 @@ function App() {
       });
   }
 
+  // Fetch images whenever auth token changes
   useEffect(() => {
-    fetchImages(); // Initial fetch
-  }, []);
+    if (authToken) {
+      fetchImages();
+    }
+  }, [authToken]);
 
   const handleImageSearch = () => {
     fetchImages(searchString);
+  };
+
+  const handleAuthSuccess = (token: string) => {
+    setAuthToken(token);
   };
 
   return (
@@ -63,37 +78,66 @@ function App() {
           <Route
             index
             element={
-              <AllImages
-                images={images}
-                loading={loading}
-                error={error}
-                searchPanel={
-                  <ImageSearchForm
-                    searchString={searchString}
-                    onSearchStringChange={setSearchString}
-                    onSearchRequested={handleImageSearch}
-                  />
-                }
-              />
+              <ProtectedRoute authToken={authToken}>
+                <AllImages
+                  images={images}
+                  loading={loading}
+                  error={error}
+                  searchPanel={
+                    <ImageSearchForm
+                      searchString={searchString}
+                      onSearchStringChange={setSearchString}
+                      onSearchRequested={handleImageSearch}
+                    />
+                  }
+                />
+              </ProtectedRoute>
             }
           />
           <Route
             path="images/:imageId"
             element={
-              <ImageDetails
-                images={images}
-                loading={loading}
-                error={error}
-                onRename={(id, newName) => {
-                  setImages(images.map(img =>
-                    img.id === id ? { ...img, name: newName } : img
-                  ));
-                }}
-              />
+              <ProtectedRoute authToken={authToken}>
+                <ImageDetails
+                  images={images}
+                  loading={loading}
+                  error={error}
+                  authToken={authToken}
+                  onRename={(id, newName) => {
+                    setImages(images.map(img =>
+                      img.id === id ? { ...img, name: newName } : img
+                    ));
+                  }}
+                />
+              </ProtectedRoute>
             }
           />
-          <Route path={ValidRoutes.UPLOAD} element={<UploadPage />} />
-          <Route path={ValidRoutes.LOGIN} element={<LoginPage />} />
+          <Route 
+            path={ValidRoutes.UPLOAD} 
+            element={
+              <ProtectedRoute authToken={authToken}>
+                <UploadPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path={ValidRoutes.LOGIN} 
+            element={
+              <LoginPage 
+                isRegistering={false} 
+                onAuthSuccess={handleAuthSuccess}
+              />
+            } 
+          />
+          <Route 
+            path={ValidRoutes.REGISTER} 
+            element={
+              <LoginPage 
+                isRegistering={true} 
+                onAuthSuccess={handleAuthSuccess}
+              />
+            } 
+          />
         </Route>
       </Routes>
     </BrowserRouter>

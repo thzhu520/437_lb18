@@ -8,10 +8,11 @@ interface ImageDetailsProps {
   images: IApiImageData[];
   loading: boolean;
   error: boolean;
+  authToken: string;
   onRename: (id: string, newName: string) => void;
 }
 
-export function ImageDetails({ images, loading, error, onRename }: ImageDetailsProps) {
+export function ImageDetails({ images, loading, error, authToken, onRename }: ImageDetailsProps) {
   const { imageId } = useParams();
 
   if (loading) {
@@ -48,6 +49,7 @@ export function ImageDetails({ images, loading, error, onRename }: ImageDetailsP
       <ImageNameEditor
         imageId={image.id}
         initialValue={image.name}
+        authToken={authToken}
         onRename={(newName) => onRename(image.id, newName)}
       />
     </>

@@ -53,7 +53,11 @@ export function registerAuthRoutes(app: express.Application, credentialsProvider
             }
 
             console.log(`✅ User ${username} registered successfully`);
-            res.status(201).send(); // Created, no body
+            
+            // Generate JWT token for the new user (MODIFICATION FOR LAB 24B)
+            const token = await generateAuthToken(username, req.app.locals.JWT_SECRET);
+            
+            res.status(201).json({ token }); // Return token instead of empty response
 
         } catch (error) {
             console.error("❌ Registration error:", error);
