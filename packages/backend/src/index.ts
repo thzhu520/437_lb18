@@ -79,29 +79,26 @@ async function main() {
     
         try {
           if (!req.file) {
-            res.status(400).json({
+            return void res.status(400).json({
               error: "Bad Request",
               message: "No image file provided",
             });
-            return;
           }
     
           const imageName = req.body.name;
           if (!imageName || typeof imageName !== "string") {
-            res.status(400).json({
+            return void res.status(400).json({
               error: "Bad Request",
               message: "Image name is required",
             });
-            return;
           }
     
           const username = req.user?.username;
           if (!username) {
-            res.status(401).json({
+            return void res.status(401).json({
               error: "Unauthorized",
               message: "Invalid authentication token",
             });
-            return;
           }
     
           const imageSrc = `/uploads/${req.file.filename}`;
@@ -111,13 +108,14 @@ async function main() {
           res.status(201).send();
         } catch (error) {
           console.error("❌ Image upload error:", error);
-          res.status(500).json({
+          return void res.status(500).json({
             error: "Internal Server Error",
             message: "Failed to save image",
           });
         }
       }) as express.RequestHandler
     );
+    
     
     
 
