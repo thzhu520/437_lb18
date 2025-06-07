@@ -42,3 +42,59 @@ Content-Type: application/json
 {
   "newName": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaX"
 }
+
+# lab 24a
+
+
+### 1. Success case (should return 201 Created)
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{
+  "username": "testuser123",
+  "password": "password123"
+}
+
+### 2. Bad Request (should return 400)
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{
+  "username": "testuser123"
+}
+
+### 3. Username already exists (should return 409 Conflict)
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{
+  "username": "testuser123",
+  "password": "password123"
+}
+
+# lab 24a pt 2
+### 1. Success case (should return JWT token)
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "username": "testuser123",
+  "password": "password123"
+}
+
+### 2. Bad Request (should return 400)
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "password": "password123"
+}
+
+### 3. Bad credentials (should return 401)
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "username": "testuser123",
+  "password": "wrongpassword"
+}
